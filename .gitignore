@@ -1,0 +1,33 @@
+# Portfolio publication: local configuration and generated files
+
+# Local files
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets.h
+local_config.h
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+dist/
+build/
+target/
+bin/
+obj/
+.pio/
+.vs/
+.idea/
+.vscode/
+*.log
+*.db
+*.sqlite*
+
+projects/
+gutachten-system/projects/
+output/
+*.dump
+*.sql.gz

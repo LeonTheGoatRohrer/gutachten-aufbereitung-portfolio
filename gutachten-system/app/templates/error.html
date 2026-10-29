@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set title = "Fehler - Gutachten-System" %}
+
+{% block content %}
+<section class="error-page">
+  <div class="workspace-section error-card">
+    <span class="status-chip light">Fehler {{ status_code }}</span>
+    <h1>Das hat nicht geklappt</h1>
+    <p class="error-detail">{{ detail }}</p>
+    <div class="button-row">
+      <a class="button primary" href="{{ back_url }}">Zurueck zum Schritt</a>
+      <a class="button secondary" href="/prototype">Zur Startseite</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

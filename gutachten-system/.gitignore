@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Projektordner enthalten echte Kundendaten und sollten bewusst behandelt werden.
+# Bei Bedarf diese Zeile aktivieren:
+# projects/

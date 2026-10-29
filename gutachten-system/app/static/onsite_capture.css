@@ -1,0 +1,283 @@
+/* Schritt 5 - Vor-Ort-Erfassung (OnSiteCapture) - mobile-first */
+:root {
+  --os-bg: #0f1417;
+  --os-panel: #ffffff;
+  --os-ink: #15201f;
+  --os-muted: #6b7780;
+  --os-line: #d7dee2;
+  --os-teal: #087f8c;
+  --os-teal-dark: #075f68;
+  --os-red: #b1352f;
+  --os-amber: #b86b00;
+  --os-green: #1f7a5a;
+  --os-tap: 52px; /* grosse Tap-Flaechen, auch mit Handschuhen */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--os-bg);
+}
+
+.onsite-body {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: var(--os-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+.onsite-root { min-height: 100vh; }
+
+.os-app {
+  max-width: 640px;
+  margin: 0 auto;
+  background: #f3f6f7;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* App-Leiste */
+.os-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  background: var(--os-teal-dark);
+  color: #fff;
+}
+.os-appbar strong { display: block; font-size: 17px; line-height: 1.2; }
+.os-appbar small { display: block; opacity: 0.85; font-size: 12px; }
+.os-appbar .os-chip { margin-left: auto; }
+
+.os-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Inhaltliche Sektionen */
+.os-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px 4px;
+}
+
+.os-section {
+  background: var(--os-panel);
+  margin: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 20, 23, 0.06);
+}
+.os-section h2 { margin: 0 0 12px; font-size: 16px; }
+.os-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.os-section-head h2 { margin: 0; }
+
+/* Labels & Felder - gross fuer Touch */
+.os-section label,
+.os-subcard label {
+  display: block;
+  font-size: 13px;
+  color: var(--os-muted);
+  margin: 10px 0 0;
+}
+.os-section input,
+.os-section select,
+.os-subcard input,
+.os-subcard select,
+.os-photo select,
+.os-photo input {
+  width: 100%;
+  min-height: var(--os-tap);
+  margin-top: 4px;
+  padding: 12px 14px;
+  font-size: 16px; /* >=16px verhindert iOS-Zoom */
+  color: var(--os-ink);
+  background: #fff;
+  border: 1.5px solid var(--os-line);
+  border-radius: 12px;
+}
+.os-section input:focus,
+.os-section select:focus,
+.os-subcard input:focus,
+.os-subcard select:focus {
+  outline: none;
+  border-color: var(--os-teal);
+  box-shadow: 0 0 0 3px rgba(8, 127, 140, 0.15);
+}
+.os-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.os-check {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px !important;
+  color: var(--os-ink) !important;
+  font-size: 15px !important;
+}
+.os-check input { width: 24px; height: 24px; min-height: 24px; margin: 0; }
+
+/* Buttons */
+.os-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--os-tap);
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--os-ink);
+  background: #fff;
+  border: 1.5px solid var(--os-line);
+  border-radius: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.os-btn:active { transform: translateY(1px); }
+.os-btn[disabled] { opacity: 0.5; pointer-events: none; }
+.os-btn-primary { background: var(--os-teal); border-color: var(--os-teal); color: #fff; }
+.os-btn-muted { background: #eef2f3; }
+.os-btn-block { width: calc(100% - 24px); margin: 12px; }
+.os-btn-small { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+
+/* Liste der Beprobungsstellen */
+.os-list { padding: 0 12px 8px; display: grid; gap: 12px; }
+.os-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--os-panel);
+  border: 0;
+  border-left: 6px solid var(--os-teal);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 16px rgba(15, 20, 23, 0.06);
+  cursor: pointer;
+}
+.os-card-top { display: flex; align-items: center; justify-content: space-between; }
+.os-card-top strong { font-size: 18px; }
+.os-card-pos { margin: 6px 0; font-size: 15px; }
+.os-card-pos em { color: var(--os-muted); }
+.os-card-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--os-muted); }
+.os-card-flags { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; }
+.os-card-flags .ok { color: var(--os-green); }
+.os-card-flags .miss { color: var(--os-red); }
+
+/* Proben-Unterkarten */
+.os-subcard {
+  border: 1.5px solid var(--os-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  background: #fbfdfd;
+}
+.os-subcard-head { display: flex; align-items: center; justify-content: space-between; }
+.os-subcard-head strong { font-size: 16px; }
+.os-mini { margin-top: 8px; font-size: 12px; color: var(--os-muted); }
+.os-icon-btn {
+  min-width: 40px; height: 40px;
+  border: 0; border-radius: 10px;
+  background: #f3e4e3; color: var(--os-red);
+  font-size: 16px; cursor: pointer;
+}
+
+/* Fotos */
+.os-photo-buttons { display: flex; gap: 10px; }
+.os-photo-buttons .os-btn { flex: 1; }
+.os-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.os-photo {
+  border: 1.5px solid var(--os-line);
+  border-radius: 14px;
+  padding: 8px;
+  background: #fbfdfd;
+}
+.os-photo img {
+  width: 100%; height: 140px; object-fit: cover;
+  border-radius: 10px; display: block; background: #e7edee;
+}
+.os-photo select, .os-photo input { margin-top: 6px; min-height: 42px; padding: 8px 10px; font-size: 14px; }
+.os-photo-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.os-textlink {
+  font-size: 13px; font-weight: 600; color: var(--os-teal);
+  background: none; border: 0; cursor: pointer; padding: 8px 4px;
+}
+.os-textlink.danger { color: var(--os-red); }
+
+/* Warnungen */
+.os-warnings { border-left: 6px solid var(--os-amber); }
+.os-warnings ul { margin: 0; padding-left: 18px; }
+.os-warnings li { margin: 4px 0; font-size: 14px; color: #6a4a00; }
+.os-ok { color: var(--os-green); font-weight: 600; }
+
+/* Statusleiste unten in der Stelle */
+.os-actions-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(243, 246, 247, 0.96);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid var(--os-line);
+}
+.os-actions-bar .os-btn { flex: 1; padding: 12px 8px; font-size: 14px; }
+
+.os-footer { padding: 16px 12px 28px; display: grid; gap: 10px; }
+.os-sync-label { font-size: 12px; color: var(--os-muted); text-align: center; }
+
+/* Chips / Status */
+.os-chip {
+  display: inline-flex; align-items: center;
+  padding: 6px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  background: #e7eef0; color: #2b3a40;
+}
+.os-chip.warn { background: #f6e4c9; color: #6a4a00; }
+.os-chip.ok { background: #d8efe5; color: var(--os-green); }
+.os-status-offen { background: #e7eef0; color: #54616a; }
+.os-status-unvollstaendig { background: #f6e4c9; color: #6a4a00; }
+.os-status-vollstaendig { background: #d8efe5; color: var(--os-green); }
+.os-status-geprueft { background: var(--os-green); color: #fff; }
+
+.os-muted { color: var(--os-muted); }
+.os-muted.small, .small { font-size: 13px; }
+
+/* Leerer / kein Projekt */
+.os-empty { padding: 40px 24px; text-align: center; }
+.os-empty h2 { margin: 0 0 8px; }
+.os-empty p { color: var(--os-muted); }
+.os-empty .os-btn { margin-top: 16px; }
+.os-noscript { padding: 24px; color: #fff; text-align: center; }
+
+/* Toast + Busy */
+.os-toast {
+  position: fixed;
+  left: 50%; bottom: 88px;
+  transform: translateX(-50%) translateY(20px);
+  background: #15201f; color: #fff;
+  padding: 12px 18px; border-radius: 12px;
+  font-size: 14px; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 30; max-width: 90vw; text-align: center;
+}
+.os-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+body.os-busy { cursor: progress; }
+body.os-busy .os-actions-bar, body.os-busy .os-footer { opacity: 0.6; }
+
+@media (min-width: 560px) {
+  .os-photo img { height: 160px; }
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "Gutachten-System" }}</title>
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="/static/styles.css?v=20260617-progress">
+  </head>
+  <body>
+    <div class="app-loader" data-app-loader role="status" aria-live="polite" aria-label="Gutachten-System wird geladen">
+      <div class="loader-card">
+        <span class="brand-mark loader-mark">GS</span>
+        <div>
+          <strong>Gutachten-System</strong>
+          <small>Backend aktiv</small>
+        </div>
+        <div class="loader-track" aria-hidden="true">
+          <span></span>
+        </div>
+      </div>
+    </div>
+    <header class="topbar">
+      <a class="brand" href="/">
+        <span class="brand-mark">GS</span>
+        <span>
+          <strong>Gutachten-System</strong>
+          <small>Backend aktiv</small>
+        </span>
+      </a>
+      <nav class="topnav">
+        <a href="#statistik">Statistik</a>
+        <a href="#workflow-explanation">Erklaerung</a>
+        <a href="#workflow">App starten</a>
+      </nav>
+      <small class="deploy-stamp" title="Zeitpunkt des letzten Deploys / Neustarts">Letzter Deploy: {{ deploy_stamp }}</small>
+    </header>
+    <main class="page">
+      {% block content %}{% endblock %}
+    </main>
+    <script src="/static/app.js?v=20260617-progress"></script>
+  </body>
+</html>

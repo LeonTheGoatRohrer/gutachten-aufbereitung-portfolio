@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+    <meta name="theme-color" content="#075f68">
+    <title>Vor-Ort-Erfassung{% if project_name %} &middot; {{ project_name }}{% endif %}</title>
+    <link rel="stylesheet" href="/static/onsite_capture.css?v=20260612-proxy-assets">
+  </head>
+  <body
+    class="onsite-body"
+    data-project-id="{{ project_id or '' }}"
+    data-project-name="{{ project_name or '' }}"
+    data-sync-url="{{ sync_url or '' }}"
+    data-back-url="{{ back_url or '/prototype/vor-ort' }}"
+  >
+    <div id="onsite-root" class="onsite-root">
+      <noscript>
+        <p class="onsite-noscript">Diese Seite benoetigt JavaScript fuer die Vor-Ort-Erfassung.</p>
+      </noscript>
+    </div>
+    <script src="/static/onsite_capture.js?v=20260612-proxy-assets"></script>
+  </body>
+</html>

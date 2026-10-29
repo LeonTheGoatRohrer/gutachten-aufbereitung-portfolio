@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set title = "Workflow-MD" %}
+
+{% block content %}
+<section class="steps-shell">
+  <aside class="steps-list">
+    <a class="back-link" href="/">Zurueck</a>
+    <h1>Workflow</h1>
+    <p>Jeder Schritt besteht aus Arbeitsanweisung und Pruefprompt.</p>
+    {% for step in steps %}
+    <a class="step-link {% if step.id == selected.id %}active{% endif %}" href="/steps?step={{ step.id }}">
+      <span>{{ step.id.split("_")[0] }}</span>
+      <strong>{{ step.title }}</strong>
+    </a>
+    {% endfor %}
+  </aside>
+
+  <form class="steps-editor" action="/steps/{{ selected.id }}" method="post">
+    <div class="editor-header">
+      <div>
+        <div class="eyebrow">Markdown-Schritt</div>
+        <h1>{{ selected.title }}</h1>
+      </div>
+      <button class="button primary" type="submit"><span>✓</span> Speichern</button>
+    </div>
+
+    <div class="editor-grid">
+      <label class="editor-pane">
+        <span>Arbeitsanweisung</span>
+        <textarea name="instruction" spellcheck="false">{{ selected.instruction }}</textarea>
+      </label>
+      <label class="editor-pane review-pane">
+        <span>Spezialisierter Pruefprompt</span>
+        <textarea name="review_prompt" spellcheck="false">{{ selected.review_prompt }}</textarea>
+      </label>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,1963 @@
+{% extends "base.html" %}
+{% set title = "Gutachten-Prototyp" %}
+
+{% block content %}
+<section id="overview" class="backend-hero">
+  <div class="backend-hero-glow" aria-hidden="true"></div>
+  <div class="backend-shapes" aria-hidden="true">
+    <div class="backend-shape backend-shape-1" style="--w: 600px; --h: 140px; --r: 12deg; --delay: .3s; --grad: rgba(203, 166, 247, .18);"><div><span></span></div></div>
+    <div class="backend-shape backend-shape-2" style="--w: 500px; --h: 120px; --r: -15deg; --delay: .5s; --grad: rgba(137, 180, 250, .18);"><div><span></span></div></div>
+    <div class="backend-shape backend-shape-3" style="--w: 300px; --h: 80px; --r: -8deg; --delay: .4s; --grad: rgba(180, 190, 254, .18);"><div><span></span></div></div>
+    <div class="backend-shape backend-shape-4" style="--w: 200px; --h: 60px; --r: 20deg; --delay: .6s; --grad: rgba(250, 179, 135, .16);"><div><span></span></div></div>
+    <div class="backend-shape backend-shape-5" style="--w: 150px; --h: 40px; --r: -25deg; --delay: .7s; --grad: rgba(137, 220, 235, .16);"><div><span></span></div></div>
+  </div>
+
+  <div class="backend-hero-content">
+    <span class="backend-badge backend-fu" style="--fu: 0">
+      <span aria-hidden="true"></span>
+      Gutachten-Aufbereitung &middot; dynamische Backend-App
+    </span>
+    <h1 class="backend-hero-title">
+      <span class="backend-fu" style="--fu: 1">Vom Rohdaten-Ordner</span>
+      <span class="backend-hero-title-grad backend-fu" style="--fu: 2">zum pruefbaren Gutachten-Entwurf</span>
+    </h1>
+    <p class="backend-hero-sub backend-fu" style="--fu: 3">
+      {% if selected_project %}
+      {{ selected_project.project.name or "Aktives Projekt" }}{% if selected_project.project.object_address %} &middot; {{ selected_project.project.object_address }}{% endif %}.
+      {% else %}
+      Backend-Version mit Upload, Projektordnern, Laborbereinigung, Vor-Ort-Werten, Tabellen, Review und Export.
+      {% endif %}
+      Laborwerte bereinigen, Proben zusammenfuehren und bewerten, den Gutachten-Entwurf vorbereiten - nachvollziehbar und fachlich vorsichtig.
+    </p>
+    <div class="backend-cta backend-fu" style="--fu: 4">
+      <a class="backend-btn backend-btn-primary" href="#workflow">Workflow starten</a>
+      {% if selected_project %}
+      <a class="backend-btn backend-btn-glass" href="/prototype/export{{ project_query }}">Zum Export</a>
+      {% else %}
+      <a class="backend-btn backend-btn-glass" href="#workflow-explanation">Wie es funktioniert</a>
+      {% endif %}
+    </div>
+    <ul class="backend-trust backend-fu" style="--fu: 5" aria-label="Systemstatus">
+      <li>Backend aktiv</li>
+      <li>Upload aktiv</li>
+      <li>SV-Freigabe bleibt Pflicht</li>
+    </ul>
+  </div>
+  <div class="backend-hero-fade" aria-hidden="true"></div>
+</section>
+
+<section id="workflow-explanation" class="backend-explanation" aria-label="Workflow-Erklaerung">
+  <div class="backend-explanation-heading">
+    <span class="backend-kicker">Workflow-Erklaerung</span>
+    <h2>Was die Backend-App macht</h2>
+    <p>
+      Die Anwendung fuehrt Rohdaten, Laborwerte, Vor-Ort-Informationen, Bilder und Review-Schritte in einem
+      pruefbaren Projekt zusammen. Alles bleibt nachvollziehbar; fachliche Freigabe und Schlussfolgerungen
+      bleiben bewusst beim Sachverstaendigen.
+    </p>
+  </div>
+  <div class="backend-explain-grid">
+    <article>
+      <span>01</span>
+      <h3>Daten importieren</h3>
+      <p>Projekt anlegen, Originaldateien sichern, ZIPs oder Ordner importieren und die relevanten Dateien zuordnen.</p>
+    </article>
+    <article>
+      <span>02</span>
+      <h3>Werte pruefen</h3>
+      <p>Laborwerte bereinigen, Vor-Ort-Werte erfassen, Proben verbinden und Mastertabellen mit Status erzeugen.</p>
+    </article>
+    <article>
+      <span>03</span>
+      <h3>Entwurf ausgeben</h3>
+      <p>Tabellen, Review-Bericht, PDF-Gutachten und Exportpaket vorbereiten - mit offenen Pruefpunkten sichtbar im System.</p>
+    </article>
+  </div>
+</section>
+
+<section id="statistik" class="backend-stats" aria-label="Projektkennzahlen">
+  <div class="backend-stat-cards">
+    <article>
+      <strong>{{ start_statistics.total_projects }}</strong>
+      <span>Projekte</span>
+    </article>
+    <article>
+      <strong>{{ start_statistics.total_files }}</strong>
+      <span>Dateien</span>
+    </article>
+    <article>
+      <strong>{{ start_statistics.total_lab_values }}</strong>
+      <span>Laborwerte</span>
+    </article>
+    <article>
+      <strong>{{ start_statistics.total_outputs }}</strong>
+      <span>Outputs</span>
+    </article>
+  </div>
+
+  <div class="daily-stats-panel">
+    <div class="daily-stats-heading">
+      <div>
+        <span class="backend-kicker">Statistik</span>
+        <h2>Tagesansicht</h2>
+      </div>
+      <span class="status-chip light">{{ start_statistics.days|length }} Tage</span>
+    </div>
+
+    {% if start_statistics.days %}
+    <div class="daily-chart" aria-label="Aktivitaet nach Tag">
+      {% for day in start_statistics.days %}
+      <button class="daily-bar {% if loop.first %}active{% endif %}" type="button" data-stat-day="{{ day.date_key }}" style="--bar-h: {{ day.height }}%;" aria-pressed="{{ 'true' if loop.first else 'false' }}">
+        <span class="daily-bar-value">{{ day.event_count }}</span>
+        <span class="daily-bar-track" aria-hidden="true"><span></span></span>
+        <span class="daily-bar-label">{{ day.short_label }}</span>
+      </button>
+      {% endfor %}
+    </div>
+
+    <div class="daily-detail-list">
+      {% for day in start_statistics.days %}
+      <article class="daily-detail {% if loop.first %}active{% endif %}" data-stat-detail="{{ day.date_key }}" {% if not loop.first %}hidden{% endif %}>
+        <div class="daily-detail-header">
+          <div>
+            <span>{{ day.label }}</span>
+            <h3>{{ day.event_count }} Ereignisse</h3>
+          </div>
+          <span class="status-chip">{{ day.project_count }} Projekte</span>
+        </div>
+        <div class="daily-detail-metrics">
+          <span><strong>{{ day.files }}</strong> Dateien</span>
+          <span><strong>{{ day.lab_values }}</strong> Laborwerte</span>
+          <span><strong>{{ day.master_samples }}</strong> Masterzeilen</span>
+          <span><strong>{{ day.outputs }}</strong> Outputs</span>
+        </div>
+        <div class="daily-detail-grid">
+          <div>
+            <h4>Projekte an diesem Tag</h4>
+            <div class="daily-projects">
+              {% for project in day.projects %}
+              <a class="daily-project-row" href="/prototype/dateien?project_id={{ project.id }}">
+                <span>
+                  <strong>{{ project.name }}</strong>
+                  <small>{{ project.status }}{% if project.updated_at %} &middot; aktualisiert {{ project.updated_at[:10] }}{% endif %}</small>
+                </span>
+                <span>{{ project.file_count }} Dateien</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          <div>
+            <h4>Aktionen</h4>
+            <ul class="daily-log-list">
+              {% for item in day.logs %}
+              <li><span>{{ item.time }}</span> {{ item.project }}: {{ item.message }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Noch keine Projektdaten fuer eine Tagesansicht vorhanden.</p>
+    {% endif %}
+  </div>
+</section>
+
+<div id="workflow"></div>
+<section class="workflow-shell">
+  <aside class="workflow-sidebar">
+    <div class="workflow-brand">
+      <div class="eyebrow">Prototyp</div>
+      <h1>Gutachten-Aufbereitung</h1>
+      <p>Schritt {{ selected_step.number }} von {{ prototype_steps|length }}</p>
+    </div>
+
+    <nav class="workflow-menu" aria-label="Arbeitsschritte">
+      {% for step in prototype_steps %}
+      {% set nav_state = step_states[step.id] %}
+      {% if nav_state.unlocked or step.id == selected_step.id %}
+      <a class="workflow-menu-item {{ nav_state.label|lower }} {% if step.id == selected_step.id %}active{% endif %}" href="/prototype/{{ step.id }}{{ project_query }}" {% if step.id == selected_step.id %}aria-current="step"{% endif %}>
+        <span>{{ step.number }}</span>
+        <strong>
+          {{ step.title }}
+          <small class="implemented-marker"><b aria-hidden="true">{% if nav_state.done %}&#10003;{% else %}&middot;{% endif %}</b> {{ nav_state.label }}</small>
+        </strong>
+      </a>
+      {% else %}
+      <span class="workflow-menu-item locked" aria-disabled="true">
+        <span>{{ step.number }}</span>
+        <strong>
+          {{ step.title }}
+          <small class="implemented-marker"><b aria-hidden="true">!</b> Fehlt</small>
+        </strong>
+      </span>
+      {% endif %}
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <main class="workflow-main">
+    {% if request.query_params.get('saved') %}
+    <div class="save-banner" role="status"><b aria-hidden="true">&#10003;</b> Gespeichert</div>
+    {% endif %}
+    <header class="workflow-header">
+      <div>
+        <div class="eyebrow">Schritt {{ selected_step.number }}</div>
+        <h1>{{ selected_step.title }}</h1>
+        <p>{{ selected_step.goal }}</p>
+      </div>
+      <div class="header-status-stack">
+        <span class="status-chip">{{ selected_step.status }}</span>
+        {% if selected_step.implemented %}
+        <span class="status-chip implemented-chip"><b aria-hidden="true">&#10003;</b> {{ selected_step.implementation_label }}</span>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="workflow-progress-panel" aria-label="Workflow-Status">
+      <div class="progress-summary">
+        <strong>Schritt {{ workflow_progress.current }} von {{ workflow_progress.total }}</strong>
+        <span>Aktuell: {{ selected_step_state.label }} &middot; {{ selected_step_state.action }}</span>
+      </div>
+      <div class="progress-track" aria-hidden="true">
+        <span style="width: {{ workflow_progress.percent }}%"></span>
+      </div>
+      {% if selected_step_state.missing %}
+      <ul class="missing-list">
+        {% for item in selected_step_state.missing %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </section>
+
+    {% if selected_step.id == "projekt" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <h2>Projekt anlegen</h2>
+          <span class="status-chip light">Basis</span>
+        </div>
+        <form class="form-panel" action="/prototype/create-project" method="post" data-validate-form>
+          <label>Projektname <span class="required-marker" aria-hidden="true">*</span>
+            <input name="project_name" placeholder="TG ExampleStreet" required>
+          </label>
+          <p class="form-hint">Nur der Projektname ist Pflicht. Alle weiteren Angaben koennen spaeter ergaenzt werden.</p>
+          <label>Objektadresse
+            <input name="object_address" placeholder="Adresse, Ort">
+          </label>
+          <div class="form-grid two">
+            <label>Auftraggeber
+              <input name="client" placeholder="Hausverwaltung / Auftraggeber">
+            </label>
+            <label>Besichtigungsdatum
+              <input name="inspection_date" type="date">
+            </label>
+          </div>
+          <div class="form-grid two">
+            <label>Sachverstaendiger
+              <input name="expert" placeholder="Name">
+            </label>
+            <label>Sachbearbeiter
+              <input name="case_worker" placeholder="Name">
+            </label>
+          </div>
+          <label>Objekttyp
+            <input name="object_type" placeholder="Tiefgarage, Parkdeck, Keller ...">
+          </label>
+          <div class="button-row">
+            <button class="button primary" type="submit" data-submit-when-valid title="Bitte Projektnamen eintragen">Projekt anlegen und zu Dateien</button>
+            {% if selected_project %}
+            <a class="button secondary" href="/prototype/dateien{{ project_query }}">Weiter zu Schritt 2</a>
+            {% else %}
+            <span class="button secondary disabled" aria-disabled="true">Weiter erst nach Projektanlage</span>
+            {% endif %}
+          </div>
+          <p class="form-hint" data-required-hint hidden>Bitte zuerst einen Projektnamen eintragen.</p>
+        </form>
+      </div>
+
+      {% if all_projects %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vorhandene Projekte</h2>
+            <p>An einem frueheren Projekt weiterarbeiten, statt ein neues anzulegen.</p>
+          </div>
+          <span class="status-chip light">{{ all_projects|length }} Projekte</span>
+        </div>
+        <div class="project-list compact-list">
+          {% for existing in all_projects[:8] %}
+          <a class="project-row {% if selected_project and selected_project.id == existing['_id'] %}active-project{% endif %}" href="/prototype/dateien?project_id={{ existing['_id'] }}">
+            <span>
+              <strong>{{ existing.project.name or existing['_id'] }}</strong>
+              <small>{{ existing.status }}{% if existing.updated_at %} &middot; {{ existing.updated_at }}{% endif %}</small>
+            </span>
+            <span class="status-chip light">{% if selected_project and selected_project.id == existing['_id'] %}aktiv{% else %}Weiterarbeiten{% endif %}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="workspace-section quiet-section">
+        <h2>Was hier erledigt wird</h2>
+        <ul class="check-list">
+          <li>Projektordner vorbereiten</li>
+          <li>Stammdaten erfassen</li>
+          <li>Workflow mit allen Schritten initialisieren</li>
+        </ul>
+      </div>
+    </section>
+
+    {% elif selected_step.id == "dateien" %}
+    <section class="workflow-workspace">
+      <div class="upload-grid">
+        <form class="upload-strip" action="/prototype/upload" method="post" enctype="multipart/form-data" data-busy-label="Wird hochgeladen &#8230;">
+          {% if selected_project %}<input type="hidden" name="project_id" value="{{ selected_project.id }}">{% endif %}
+          <label class="upload-control">
+            <span>Projekt-ZIP oder einzelne Datei einfuegen</span>
+            <input type="file" name="gutachten_file" accept=".zip,.doc,.docx,.pdf" required>
+          </label>
+          <button class="button primary" type="submit">Datei importieren</button>
+          <p class="form-hint">ZIP-Dateien werden am Server gesichert und entpackt.</p>
+        </form>
+
+        <form class="upload-strip compact-upload" action="/prototype/upload-folder" method="post" enctype="multipart/form-data" data-client-zip-folder="true">
+          {% if selected_project %}<input type="hidden" name="project_id" value="{{ selected_project.id }}">{% endif %}
+          <label class="upload-control">
+            <span>Ordner automatisch als ZIP hochladen</span>
+            <input type="file" name="project_files" webkitdirectory directory multiple required>
+          </label>
+          <button class="button secondary" type="submit">Ordner als ZIP importieren</button>
+          <p class="form-hint" data-client-zip-status>Der Browser buendelt den Ordner vor dem Transfer zu einer ZIP-Datei. Am Server wird sie entpackt.</p>
+          <div class="upload-progress" data-client-zip-progress hidden>
+            <div class="upload-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-client-zip-track>
+              <div class="upload-progress-bar" data-client-zip-bar></div>
+            </div>
+            <span class="upload-progress-label" data-client-zip-percent>0 %</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <h2>Aktives Projekt</h2>
+          {% if selected_project and selected_project.file_inventory %}
+          <a class="text-link" href="/prototype/klassifizieren{{ project_query }}">Weiter zu Schritt 3</a>
+          {% else %}
+          <span class="status-chip light">Import erforderlich</span>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <div class="project-row active-project">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">aktiv</span>
+          </div>
+        </div>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt. Importiere hier ein ZIP, eine Datei oder einen Projektordner.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    {% elif selected_step.id == "klassifizieren" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Projekt fuer Klassifizierung auswaehlen</h2>
+            <p>Es wird nur das Projekt verwendet, das du am Anfang angelegt oder importiert hast.</p>
+          </div>
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/klassifizieren?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.file_inventory|length }} Dateien erkannt</small>
+            </span>
+            <span class="status-chip light">aktiv</span>
+          </a>
+        </div>
+        {% else %}
+        <p class="empty-state">Erst in Schritt 2 Dateien importieren oder in Schritt 1 ein Projekt anlegen.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project %}
+      <form class="classification-layout" action="/prototype/classify" method="post" data-classification-form>
+        <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+
+        <section class="workspace-section classification-panel">
+          <div class="section-heading compact">
+            <div>
+              <h2>Wichtige Dateien zuordnen</h2>
+              <p>Erst oben eine Pflichtdatei anklicken, dann unten im Explorer die passende Datei oder den passenden Ordner auswaehlen. Anlagen koennen mehrfach gewaehlt werden.</p>
+            </div>
+            <span class="status-chip">{{ selected_project.project.name or selected_project.id }}</span>
+          </div>
+
+          <div class="role-grid">
+            {% for role in classification_roles %}
+            {% set current_value = selected_project.selected_files.get(role.key, "") %}
+            <button class="role-card {% if loop.first %}active{% endif %}" type="button" data-role-card data-role-key="{{ role.key }}" data-role-title="{{ role.title }}" data-role-multiple="{{ 'true' if role.multiple else 'false' }}">
+              <span>{{ role.accepts }}</span>
+              <strong>{{ role.title }}</strong>
+              <small>{{ role.hint }}</small>
+              <em data-role-value="{{ role.key }}">{{ current_value or "Noch nicht ausgewaehlt" }}</em>
+            </button>
+            <input type="hidden" name="{{ role.key }}" value="{{ current_value }}" data-role-input="{{ role.key }}">
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="workspace-section explorer-panel">
+          <div class="section-heading compact">
+            <div>
+              <h2>Datei-Explorer</h2>
+              <p>Suche nach Dateinamen oder klappe grosse Ordner ein und aus.</p>
+            </div>
+            <button class="button primary" type="submit" data-classification-submit disabled>Zuordnung speichern und weiter zu Schritt 4</button>
+          </div>
+
+          {% if selected_project_tree %}
+          <label class="explorer-search">Datei oder Ordner suchen
+            <input type="search" placeholder="z. B. xlsx, chlorid, gutachten, bilder ..." data-file-search>
+          </label>
+          <div class="file-tree explorer-tree" aria-label="Projektdateien">
+            {% for item in selected_project_tree[:240] %}
+            <div class="tree-row {% if item.type == 'dir' %}tree-dir{% else %}tree-file{% endif %}" style="--depth: {{ item.depth }}" data-tree-row data-tree-type="{{ item.type }}" data-tree-depth="{{ item.depth }}" data-tree-path="{{ item.path }}" data-tree-name="{{ item.name|lower }}">
+              {% if item.type == "dir" %}
+              <button class="tree-toggle" type="button" data-tree-toggle aria-label="Ordner einklappen">v</button>
+              {% else %}
+              <span class="tree-icon">.</span>
+              {% endif %}
+              <span class="tree-name">{{ item.name }}</span>
+              {% if item.type == "file" %}
+              <span class="status-chip light">{{ item.category }}</span>
+              <small>{{ (item.size / 1024)|round(1) }} KB</small>
+              {% else %}
+              <span class="status-chip light">Ordner</span>
+              <small>Ordner</small>
+              {% endif %}
+              <span class="selected-for" data-selected-for="{{ item.path }}"></span>
+              <button class="tree-pick-button" type="button" data-pick-path="{{ item.path }}" data-pick-type="{{ item.type }}">
+                Auswaehlen
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="empty-state">Dieses Projekt hat noch kein Datei-Inventar.</p>
+          {% endif %}
+        </section>
+      </form>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "laborwerte" %}
+    <section class="workflow-workspace">
+      {% if selected_project and selected_project.selected_files.lab_file %}
+      {% set lab_s1 = 'done' if selected_project.lab_values else 'active' %}
+      {% set lab_s2 = 'done' if selected_project.lab_table_accepted else ('active' if selected_project.lab_values else 'pending') %}
+      {% set lab_s3 = 'done' if selected_project.outputs.clean_lab_values else ('active' if selected_project.lab_table_accepted else 'pending') %}
+      <ol class="lab-stage-indicator" aria-label="Ablauf in Schritt 4">
+        <li class="lab-stage {{ lab_s1 }}"><b>1</b> Zwischentabelle erzeugen</li>
+        <li class="lab-stage {{ lab_s2 }}"><b>2</b> Zwischentabelle akzeptieren</li>
+        <li class="lab-stage {{ lab_s3 }}"><b>3</b> Excel in Output speichern</li>
+      </ol>
+      {% endif %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Laborwerte bereinigen</h2>
+            <p>Die Labor-Datei wird hier kontrolliert betrachtet. Du markierst die relevanten Zeilen, das System erzeugt daraus die saubere Zwischentabelle.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.clean_lab_values %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.clean_lab_values }}">Output laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <div class="project-row active-project">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>
+                {% if selected_project.selected_files.lab_file %}
+                Labor-Excel: {{ selected_project.selected_files.lab_file }}
+                {% else %}
+                {{ selected_project.status }}
+                {% endif %}
+              </small>
+            </span>
+            <span class="status-chip light">aus Schritt 3</span>
+          </div>
+        </div>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden. Bitte zuerst Schritt 2 ausfuehren.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and not selected_project.selected_files.lab_file %}
+      <div class="workspace-section quiet-section">
+        <h2>Labor-Datei fehlt</h2>
+        <p>Bitte in Schritt 3 zuerst die Labor-Excel / Chloridwerte zuordnen.</p>
+        <a class="button primary" href="/prototype/klassifizieren?project_id={{ selected_project.id }}">Zu Schritt 3</a>
+      </div>
+      {% elif selected_project and lab_preview %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vorschau</h2>
+            <p>{{ lab_preview.source }}</p>
+          </div>
+          {% if lab_preview.supported and lab_preview.sheets|length > 1 %}
+          <form class="sheet-select-form" action="/prototype/laborwerte" method="get">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <label>Tabellenblatt
+              <select name="sheet_name" onchange="this.form.submit()">
+                {% for sheet in lab_preview.sheets %}
+                <option value="{{ sheet }}" {% if sheet == lab_preview.selected_sheet %}selected{% endif %}>{{ sheet }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </form>
+          {% endif %}
+        </div>
+
+        {% if lab_preview.warnings %}
+        <ul class="warning-list">
+          {% for warning in lab_preview.warnings %}
+          <li>{{ warning }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if lab_preview.supported %}
+        {% if lab_preview.limit_rows %}
+        <div class="preview-limit-row">
+          <p class="form-hint">
+            Die Vorschau zeigt die ersten {{ lab_preview.limit_rows }} Zeilen und {{ lab_preview.limit_cols }} Spalten.
+            Die Extraktion selbst liest bis Zeile 1000 / Spalte 200 &ndash; Zeilennummern ausserhalb der Vorschau sind also erlaubt.
+          </p>
+          {% if not lab_preview_expanded %}
+          <a class="button secondary" href="/prototype/laborwerte?project_id={{ selected_project.id }}&amp;sheet_name={{ lab_preview.selected_sheet }}&amp;preview=voll">Mehr laden (200 Zeilen / 40 Spalten)</a>
+          {% else %}
+          <a class="button secondary" href="/prototype/laborwerte?project_id={{ selected_project.id }}&amp;sheet_name={{ lab_preview.selected_sheet }}">Kompakte Vorschau</a>
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="lab-workbench">
+          <div class="lab-preview-table" aria-label="Labor-Dateivorschau">
+            <table>
+              <thead>
+                <tr>
+                  <th>Zeile</th>
+                  {% for header in lab_preview.headers %}
+                  <th>{{ header }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in lab_preview.rows %}
+                <tr>
+                  <th>{{ row.number }}</th>
+                  {% for cell in row.cells %}
+                  <td>{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <form class="form-panel lab-manual-form" action="/prototype/laborwerte/manual" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <input type="hidden" name="lab_file" value="{{ selected_project.selected_files.lab_file }}">
+            <input type="hidden" name="sheet_name" value="{{ lab_preview.selected_sheet }}">
+            {% set manual = selected_project.lab_manual_selection or {} %}
+            <div class="form-grid two">
+              <label>Probenzeile
+                <input name="sample_row" type="number" min="1" value="{{ manual.sample_row or '' }}" placeholder="z. B. 8" required>
+              </label>
+              <label>Chloridwert-Zeile
+                <input name="value_row" type="number" min="1" value="{{ manual.value_row or '' }}" placeholder="z. B. 12" required>
+              </label>
+            </div>
+            <label>Einheit
+              <input name="unit" value="{{ manual.unit or 'Masse-%' }}" placeholder="Masse-%">
+            </label>
+            <div class="form-grid two">
+              <label>Erste Spalte optional
+                <input name="first_col" value="{{ manual.first_col or '' }}" placeholder="z. B. B">
+              </label>
+              <label>Letzte Spalte optional
+                <input name="last_col" value="{{ manual.last_col or '' }}" placeholder="z. B. M">
+              </label>
+            </div>
+            <button class="button primary" type="submit">Saubere Laborwerte erzeugen</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.lab_values %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Bereinigte Zwischentabelle</h2>
+            <p>Diese Werte wurden aus der Vorschau erzeugt. Pruefe sie und akzeptiere sie, wenn sie passen.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.lab_values|length }} Werte</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Chloridwert</th>
+                <th>Numerisch</th>
+                <th>Einheit</th>
+                <th>Quelle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_project.lab_values %}
+              <tr>
+                <td>{{ item.probe }}</td>
+                <td>{{ item.chloride_display }}</td>
+                <td>{{ item.chloride_numeric if item.chloride_numeric is not none else "" }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.source }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="button-row table-save-row">
+          {% if not selected_project.lab_table_accepted %}
+          <form action="/prototype/laborwerte/accept" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Zwischentabelle akzeptieren</button>
+          </form>
+          <span class="status-chip light">noch nicht akzeptiert</span>
+          {% else %}
+          <span class="status-chip implemented-chip">akzeptiert{% if selected_project.lab_table_accepted_at %} &middot; {{ selected_project.lab_table_accepted_at }}{% endif %}</span>
+          <span class="form-hint">Eine neue Extraktion setzt die Akzeptanz automatisch zurueck.</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if selected_project.lab_table_accepted %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vorschau der formatierten Excel-Tabelle</h2>
+            <p>So sieht die bereinigte Labor-Excel aus. Wenn sie passt, speicherst du sie in den Output-Ordner.</p>
+          </div>
+          <span class="status-chip light">{{ selected_project.lab_values|length }} Zeilen &middot; 6 Spalten</span>
+        </div>
+        <div class="excel-output-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Chloridwert</th>
+                <th>Numerisch</th>
+                <th>Einheit</th>
+                <th>Quelle</th>
+                <th>Sicherheit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_project.lab_values %}
+              <tr>
+                <td>{{ item.probe }}</td>
+                <td>{{ item.chloride_display }}</td>
+                <td>{{ item.chloride_numeric if item.chloride_numeric is not none else "" }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.source }}</td>
+                <td>{{ item.confidence }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="button-row table-save-row">
+          <form action="/prototype/laborwerte/save-table" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Excel in Output speichern</button>
+          </form>
+          {% if selected_project.outputs.clean_lab_values %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.clean_lab_values }}">Excel herunterladen</a>
+          <span class="status-chip implemented-chip">in Output gespeichert</span>
+          {% else %}
+          <span class="status-chip light">noch nicht gespeichert</span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if selected_project.outputs.clean_lab_values %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>In Output gespeichert</h2>
+            <p>{{ selected_project.outputs.clean_lab_values }}</p>
+          </div>
+          {% if selected_project.lab_clean_table_saved_at %}
+          <span class="status-chip implemented-chip">{{ selected_project.lab_clean_table_saved_at }}</span>
+          {% endif %}
+        </div>
+        <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.clean_lab_values }}">Excel herunterladen</a>
+      </div>
+      {% endif %}
+      {% endif %}
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "vor-ort" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vor-Ort-Erfassung (mobil)</h2>
+            <p>Beprobungsstellen, Proben, Bohrtiefen, Hoehen, Hinweise und Fotos direkt am Handy erfassen. Funktioniert offline und speichert lokal, bis du mit dem Projekt synchronisierst.</p>
+          </div>
+          <span class="status-chip implemented-chip"><b aria-hidden="true">&#10003;</b> Mobile Erfassung</span>
+        </div>
+
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <div class="project-row active-project">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">aktives Projekt</span>
+          </div>
+        </div>
+        <div class="button-row">
+          <a class="button primary" href="/prototype/onsite?project_id={{ selected_project.id }}">Vor-Ort-Erfassung oeffnen</a>
+          <form action="/prototype/vor-ort/mock" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button secondary" type="submit" data-confirm="Mockdaten sind nur fuer den Prototyp und muessen fachlich ersetzt werden. Wirklich erzeugen?">Mockdaten fuer Prototyp erzeugen</button>
+          </form>
+          <form action="/prototype/vor-ort/skip" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <input type="hidden" name="reason" value="Vom Auftraggeber wurden keine Vor-Ort-Werte geliefert.">
+            <button class="button secondary" type="submit" data-confirm="Damit werden Vor-Ort-Felder bewusst leer gefuehrt. Nur verwenden, wenn die Daten wirklich nicht geliefert wurden.">Vor-Ort-Daten als nicht geliefert markieren</button>
+          </form>
+        </div>
+        <p class="hint-text">Tipp: Mockdaten sind nur fuer den Prototyp-Durchlauf gedacht und werden in den folgenden Schritten sichtbar markiert.</p>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt. Bitte zuerst ein Projekt anlegen oder importieren.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_mock %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Mockdaten aktiv</h2>
+            <p>{{ selected_project.field_measurements_mock.reason }}</p>
+          </div>
+          <span class="status-chip light">{{ selected_project.field_measurements_mock.saved_at }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vor-Ort-Schritt uebersprungen</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">{{ selected_project.field_measurements_unavailable.saved_at }}</span>
+        </div>
+        {% if selected_project.outputs.field_measurements %}
+        <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.field_measurements }}">Leere Vor-Ort-Tabelle laden</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Aktuelle Vor-Ort-Tabelle</h2>
+            <p>{{ selected_project.field_measurements|length }} Zeilen gespeichert.</p>
+          </div>
+          {% if selected_project.outputs.field_measurements %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.field_measurements }}">Excel laden</a>
+          {% endif %}
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Position</th>
+                <th>Bohrtiefe</th>
+                <th>Hoehe</th>
+                <th>Karbonatisierung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_project.field_measurements %}
+              <tr>
+                <td>{{ item.probe }}</td>
+                <td>{{ item.position }}</td>
+                <td>{{ item.drill_depth_mm }}</td>
+                <td>{{ item.height_cm }}</td>
+                <td>{{ item.carbonation }}</td>
+                <td>{{ item.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.onsite_summary %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Zuletzt synchronisierte Vor-Ort-Daten</h2>
+            <p>{{ selected_project.onsite_summary.synced_at }}</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.onsite_summary.locations }} Stellen</span>
+        </div>
+        <ul class="summary-list">
+          <li>{{ selected_project.onsite_summary.locations }} Beprobungsstellen</li>
+          <li>{{ selected_project.onsite_summary.samples }} Proben</li>
+          <li>{{ selected_project.onsite_summary.photos }} Fotos</li>
+          <li>{{ selected_project.onsite_summary.warnings }} offene Hinweise</li>
+        </ul>
+        {% if selected_project.outputs.onsite_capture %}
+        <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.onsite_capture }}">Vor-Ort-JSON laden</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "normalisieren" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Probennummern, Bohrtiefe und Hoehe pruefen</h2>
+            <p>Proben werden als PXX gefuehrt, Bohrtiefe und Hoehe koennen nachgetragen oder fuer den Prototyp mit Mockdaten belegt werden.</p>
+          </div>
+          <span class="status-chip light">Schritt 6</span>
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/vor-ort?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.field_measurements|length }} Vor-Ort-Zeilen</span>
+          </a>
+        </div>
+        <div class="button-row">
+          <form action="/prototype/vor-ort/mock" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button secondary" type="submit" data-confirm="Mockdaten sind nur fuer den Prototyp und muessen fachlich ersetzt werden. Wirklich erzeugen?">Mockdaten fuer Prototyp erzeugen</button>
+          </form>
+          {% if selected_project.field_measurements or selected_project.field_measurements_unavailable %}
+          <a class="button primary" href="/prototype/gruppieren?project_id={{ selected_project.id }}">Weiter zu Schritt 7</a>
+          {% else %}
+          <span class="button primary disabled" aria-disabled="true">Weiter nach CSV/TSV oder Vor-Ort-Status</span>
+          {% endif %}
+        </div>
+        <form class="form-panel lab-manual-form" action="/prototype/vor-ort/import" method="post">
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <label>Daten nachtraeglich als CSV/TSV einfuegen
+            <textarea name="field_text" rows="7" spellcheck="false" placeholder="Probe&#9;Position&#9;Bohrtiefe [mm]&#9;Hoehe [cm]&#9;Karbonatisierung&#9;Bemerkung">{{ selected_project.field_text or "" }}</textarea>
+          </label>
+          <button class="button primary" type="submit">CSV/TSV uebernehmen</button>
+        </form>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_mock %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Mockdaten aktiv</h2>
+            <p>{{ selected_project.field_measurements_mock.reason }}</p>
+          </div>
+          <span class="status-chip light">ersetzen vor fachlicher Nutzung</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Keine Vor-Ort-Daten</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">Fortfahren moeglich</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Pruefvorschau</h2>
+            <p>{{ selected_project.field_measurements|length }} Zeilen fuer Schritt 6.</p>
+          </div>
+          {% if selected_project.outputs.field_measurements %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.field_measurements }}">Excel laden</a>
+          {% endif %}
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Position</th>
+                <th>Bohrtiefe</th>
+                <th>Hoehe</th>
+                <th>Karbonatisierung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_project.field_measurements %}
+              <tr>
+                <td>{{ item.probe }}</td>
+                <td>{{ item.position }}</td>
+                <td>{{ item.drill_depth_mm }}</td>
+                <td>{{ item.height_cm }}</td>
+                <td>{{ item.carbonation }}</td>
+                <td>{{ item.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "gruppieren" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Proben gruppieren</h2>
+            <p>Gleiche Positionen werden als Beprobungsstelle vorgeschlagen. Fehlende Positionen und Mockdaten bleiben sichtbar markiert.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.sample_groups %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.sample_groups }}">Gruppierung laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/normalisieren?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.field_measurements|length }} Vor-Ort-Zeilen</span>
+          </a>
+        </div>
+        <div class="button-row">
+          <form action="/prototype/gruppieren/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Gruppierung vorschlagen</button>
+          </form>
+          <a class="button secondary" href="/prototype/verbinden?project_id={{ selected_project.id }}">Weiter zu Schritt 8</a>
+        </div>
+        {% if not selected_project.field_measurements %}
+        <p class="empty-state">Bitte zuerst Schritt 6 mit echten Vor-Ort-Werten, CSV/TSV oder Mockdaten befuellen.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_mock %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Mockdaten aktiv</h2>
+            <p>{{ selected_project.field_measurements_mock.reason }}</p>
+          </div>
+          <span class="status-chip light">Gruppierung nur fuer Prototyp</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Keine Gruppierung moeglich</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">Vor-Ort-Daten fehlen</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.sample_groups %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Gruppierungsvorschlag</h2>
+            <p>{{ selected_project.sample_groups|length }} Beprobungsstellen vorgeschlagen.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.sample_groups|length }} Gruppen</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Beprobungsstelle</th>
+                <th>Position</th>
+                <th>Proben</th>
+                <th>Bohrtiefen</th>
+                <th>Hoehen</th>
+                <th>Karbonatisierung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for group in selected_project.sample_groups %}
+              <tr>
+                <td>{{ group.group_id }}</td>
+                <td>{{ group.position }}</td>
+                <td>{{ group.probes }}</td>
+                <td>{{ group.drill_depths }}</td>
+                <td>{{ group.heights }}</td>
+                <td>{{ group.carbonation }}</td>
+                <td>{{ group.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "verbinden" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Labor und Vor-Ort verbinden</h2>
+            <p>Laborwerte und Vor-Ort-Daten werden nur ueber die Probennummer zusammengefuehrt. Fehlende Werte bleiben sichtbar offen.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.lab_field_merge %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.lab_field_merge }}">Verbindung laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/gruppieren?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.lab_values|length }} Labor / {{ selected_project.field_measurements|length }} Vor-Ort</span>
+          </a>
+        </div>
+        <div class="button-row">
+          <form action="/prototype/verbinden/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Labor und Vor-Ort verbinden</button>
+          </form>
+          <a class="button secondary" href="/prototype/mastertabelle?project_id={{ selected_project.id }}">Weiter zu Schritt 9</a>
+        </div>
+        {% if not selected_project.lab_values %}
+        <p class="empty-state">Bitte zuerst Schritt 4 mit Laborwerten ausfuehren.</p>
+        {% endif %}
+        {% if not selected_project.field_measurements and not selected_project.field_measurements_unavailable %}
+        <p class="empty-state">Bitte zuerst Schritt 6 mit Vor-Ort-Daten, CSV/TSV, Mockdaten oder bewusster Meldung befuellen.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vor-Ort-Daten fehlen</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">Verbindung mit Hinweis</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.field_measurements_mock %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Mockdaten aktiv</h2>
+            <p>{{ selected_project.field_measurements_mock.reason }}</p>
+          </div>
+          <span class="status-chip light">ersetzen vor fachlicher Nutzung</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.lab_field_merge %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Verbindungsvorschau</h2>
+            <p>{{ selected_project.lab_field_merge|length }} Proben abgeglichen.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.lab_field_merge|length }} Zeilen</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Beprobungsstelle</th>
+                <th>Position</th>
+                <th>Bohrtiefe</th>
+                <th>Hoehe</th>
+                <th>Chlorid</th>
+                <th>Quelle</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in selected_project.lab_field_merge %}
+              <tr>
+                <td>{{ row.probe }}</td>
+                <td>{{ row.group_id }}</td>
+                <td>{{ row.position }}</td>
+                <td>{{ row.drill_depth_mm }}</td>
+                <td>{{ row.height_cm }}</td>
+                <td>{{ row.chloride_display }}</td>
+                <td>{{ row.source }}</td>
+                <td>{{ row.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "mastertabelle" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Mastertabelle erzeugen</h2>
+            <p>Laborwerte und vorhandene Vor-Ort-Daten werden ueber die Probennummer verbunden. Wenn Vor-Ort-Daten nicht geliefert wurden, bleiben diese Felder bewusst offen.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.master_samples %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.master_samples }}">Master laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/verbinden?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.lab_field_merge|length }} verbundene Zeilen</span>
+          </a>
+        </div>
+        <form class="button-row" action="/prototype/master/generate" method="post">
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <button class="button primary" type="submit">Master-Probenliste erzeugen</button>
+        </form>
+        {% if not selected_project.lab_field_merge %}
+        <p class="empty-state">Schritt 8 wurde noch nicht erzeugt. Die Masterliste kann trotzdem erstellt werden, fachlich sauberer ist zuerst der Verbindungscheck in Schritt 8.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vor-Ort-Daten fehlen</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">bewusst offen</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.master_samples %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Master-Vorschau</h2>
+            <p>{{ selected_project.master_samples|length }} Proben verbunden.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.master_samples|length }} Zeilen</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Position</th>
+                <th>Bohrtiefe</th>
+                <th>Hoehe</th>
+                <th>Chlorid</th>
+                <th>Karbonatisierung</th>
+                <th>Bewertung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in selected_project.master_samples %}
+              <tr class="row-{{ sample.color }}">
+                <td>{{ sample.probe }}</td>
+                <td>{{ sample.position }}</td>
+                <td>{{ sample.drill_depth_mm }}</td>
+                <td>{{ sample.height_cm }}</td>
+                <td>{{ sample.chloride_display }}</td>
+                <td>{{ sample.carbonation }}</td>
+                <td>{{ sample.rating }}</td>
+                <td>{{ sample.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "markierung" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Markierungen vorbereiten</h2>
+            <p>Die Software erzeugt nur Markierungsvorschlaege aus der Masterliste. Fachliche Freigabe bleibt beim SV.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.marking_proposals %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.marking_proposals }}">Markierungen laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="button-row">
+          <form action="/prototype/markierung/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Markierungsvorschlaege erzeugen</button>
+          </form>
+          <a class="button secondary" href="/prototype/bilder?project_id={{ selected_project.id }}">Weiter zu Schritt 11</a>
+        </div>
+        {% if not selected_project.master_samples %}
+        <p class="empty-state">Bitte zuerst Schritt 9 mit der Master-Probenliste ausfuehren.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.marking_proposals %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vorschau</h2>
+            <p>{{ selected_project.marking_proposals|length }} Markierungsvorschlaege.</p>
+          </div>
+          <span class="status-chip implemented-chip">pruefpflichtig</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Chlorid</th>
+                <th>Farbe</th>
+                <th>Vorschlag</th>
+                <th>Begruendung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in selected_project.marking_proposals %}
+              <tr class="row-{{ item.color }}">
+                <td>{{ item.probe }}</td>
+                <td>{{ item.chloride_display }}</td>
+                <td>{{ item.color }}</td>
+                <td>{{ item.proposal }}</td>
+                <td>{{ item.reason }}</td>
+                <td>{{ item.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "bilder" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Bilder importieren und sortieren</h2>
+            <p>Vorhandene Bilddateien aus dem Projektimport werden angezeigt. Waehle hier nur die Bilder aus, die spaeter im Gutachten verwendet werden sollen.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.image_inventory %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.image_inventory }}">Bildinventar laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="button-row">
+          <form action="/prototype/bilder/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">Bilder anzeigen und sortieren</button>
+          </form>
+          {% if selected_project.selected_image_ids %}
+          <a class="button secondary" href="/prototype/positionsbilder?project_id={{ selected_project.id }}">Weiter zu Schritt 12</a>
+          {% else %}
+          <span class="button secondary disabled" aria-disabled="true">Weiter nach Bildauswahl</span>
+          {% endif %}
+        </div>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.image_inventory %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Bildinventar</h2>
+            <p>{{ selected_project.image_inventory|length }} Bilder erkannt.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_project.image_inventory|length }} Bilder</span>
+        </div>
+        <form action="/prototype/bilder/select" method="post" data-image-selection-form>
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <div class="button-row image-selection-actions">
+            <button class="button secondary" type="button" data-image-select-all>Alle Bilder auswaehlen</button>
+            <span class="status-chip light" data-image-selection-count>{{ selected_project.selected_image_ids|length }} ausgewaehlt</span>
+          </div>
+          <div class="image-selection-grid">
+            {% for image in selected_project.image_inventory %}
+            <label class="image-selection-card">
+              <span class="image-preview-frame">
+                <img src="/projects/{{ selected_project.id }}/download?path={{ image.path }}" alt="{{ image.name }}">
+              </span>
+              <span class="image-selection-meta">
+                <strong>{{ image.image_id }} &middot; {{ image.name }}</strong>
+                <small>{{ image.path }}</small>
+                <span>
+                  <input type="checkbox" name="selected_image_ids" value="{{ image.image_id }}" {% if image.use_in_report %}checked{% endif %} data-image-selection-checkbox>
+                  Im Gutachten verwenden
+                </span>
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="button-row table-save-row">
+            <button class="button primary" type="submit">Bildauswahl speichern</button>
+            {% if selected_project.selected_image_ids %}
+            <span class="status-chip implemented-chip">{{ selected_project.selected_image_ids|length }} ausgewaehlt</span>
+            {% else %}
+            <span class="status-chip light">noch keine Auswahl gespeichert</span>
+            {% endif %}
+          </div>
+        </form>
+
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Dateiname</th>
+                <th>Pfad</th>
+                <th>Datum</th>
+                <th>Verwendung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for image in selected_project.image_inventory %}
+              <tr>
+                <td>{{ image.image_id }}</td>
+                <td>{{ image.name }}</td>
+                <td>{{ image.path }}</td>
+                <td>{{ image.modified }}</td>
+                <td>{% if image.use_in_report %}verwenden{% else %}nicht verwenden{% endif %}</td>
+                <td>{{ image.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "positionsbilder" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Positionsbilder zuordnen</h2>
+            <p>Die Zuordnung nutzt nur Bilder, die in Schritt 11 fuer das Gutachten ausgewaehlt wurden. Nicht eindeutige Bilder bleiben offen.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.position_image_assignments %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.position_image_assignments }}">Zuordnung laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="button-row">
+          <form action="/prototype/positionsbilder/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button secondary" type="submit">Automatischen Vorschlag testen</button>
+          </form>
+          {% if selected_project.position_image_assignments %}
+          <a class="button secondary" href="/prototype/bildtexte?project_id={{ selected_project.id }}">Weiter zu Schritt 13</a>
+          {% else %}
+          <span class="button secondary disabled" aria-disabled="true">Weiter nach Positionszuordnung</span>
+          {% endif %}
+        </div>
+        {% if not selected_project.sample_groups %}
+        <p class="empty-state">Bitte zuerst Schritt 7 mit Beprobungsstellen ausfuehren.</p>
+        {% elif not selected_project.selected_image_ids %}
+        <p class="empty-state">Bitte zuerst in Schritt 11 die Gutachtenbilder auswaehlen.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.sample_groups and selected_report_images %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Positionsbilder manuell zuordnen</h2>
+            <p>Waehle fuer jede Beprobungsstelle ein oder mehrere Bilder aus. Bilder, die bereits bei einer anderen Beprobungsstelle gewaehlt sind, werden dort ausgeblendet.</p>
+          </div>
+          <span class="status-chip implemented-chip">{{ selected_report_images|length }} Bilder verfuegbar</span>
+        </div>
+        <form class="position-assignment-list" action="/prototype/positionsbilder/save" method="post" data-position-assignment-form>
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          {% set assigned_image_ids = namespace(values=[]) %}
+          {% for group in selected_project.sample_groups %}
+          {% set current_assignment = position_assignment_by_group.get(group.group_id, {}) %}
+          {% set current_image_ids = current_assignment.image_ids or ([current_assignment.image_id] if current_assignment.image_id else []) %}
+          <section class="position-assignment-row">
+            <div class="assignment-heading">
+              <div>
+                <h3>{{ group.group_id }}</h3>
+                <p>{{ group.position or "Position offen" }}{% if group.probes %} &middot; Proben {{ group.probes }}{% endif %}</p>
+              </div>
+              <div class="assignment-actions">
+                <span class="status-chip light">{{ current_assignment.status or "noch nicht zugeordnet" }}</span>
+                <button class="button primary assignment-save-button" type="submit" name="save_group" value="{{ group.group_id }}">Speichern</button>
+              </div>
+            </div>
+            <div class="assignment-image-grid">
+              {% for image in selected_report_images %}
+              {% if image.image_id not in assigned_image_ids.values or image.image_id in current_image_ids %}
+              <label class="assignment-image-card" data-assignment-option data-image-id="{{ image.image_id }}" data-group-id="{{ group.group_id }}">
+                <input type="checkbox" name="image__{{ group.group_id }}" value="{{ image.image_id }}" {% if image.image_id in current_image_ids %}checked{% endif %}>
+                <span class="image-preview-frame">
+                  <img src="/projects/{{ selected_project.id }}/download?path={{ image.path }}" alt="{{ image.name }}">
+                </span>
+                <strong>{{ image.image_id }}</strong>
+                <small>{{ image.name }}</small>
+              </label>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </section>
+          {% set assigned_image_ids.values = assigned_image_ids.values + current_image_ids %}
+          {% endfor %}
+          <div class="button-row table-save-row">
+            <button class="button primary" type="submit">Alle Positionsbilder speichern</button>
+            {% if selected_project.outputs.position_image_assignments %}
+            <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.position_image_assignments }}">Zuordnung laden</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.position_image_assignments %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Aktuelle Zuordnung</h2>
+            <p>{{ selected_project.position_image_assignments|length }} Zeilen.</p>
+          </div>
+          <span class="status-chip implemented-chip">gespeichert</span>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Beprobungsstelle</th>
+                <th>Position</th>
+                <th>Proben</th>
+                <th>Bild</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in selected_project.position_image_assignments %}
+              <tr>
+                <td>{{ row.group_id }}</td>
+                <td>{{ row.position }}</td>
+                <td>{{ row.probes }}</td>
+                <td>{{ row.image_path }}</td>
+                <td>{{ row.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "bildtexte" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Bildtexte vorbereiten</h2>
+            <p>Hier werden keine Texte automatisch vorgeschlagen. Schreibe die Bildtexte selbst zu den bereits zugeordneten Positionsbildern.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.image_captions %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.image_captions }}">Bildtexte laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="button-row">
+          <form action="/prototype/bildtexte/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button secondary" type="submit">Leere Bildtextfelder vorbereiten</button>
+          </form>
+          {% if selected_project.image_captions %}
+          <a class="button secondary" href="/prototype/karbonatisierung?project_id={{ selected_project.id }}">Weiter zu Schritt 14</a>
+          {% else %}
+          <span class="button secondary disabled" aria-disabled="true">Weiter nach Bildtextspeicherung</span>
+          {% endif %}
+        </div>
+        {% if not selected_project.position_image_assignments %}
+        <p class="empty-state">Bitte zuerst Schritt 12 mit Positionsbildern ausfuehren.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and image_caption_rows %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Bildtexte schreiben</h2>
+            <p>{{ image_caption_summary.total }} zugeordnete Bilder. {{ image_caption_summary.done }} mit Text, {{ image_caption_summary.missing }} noch offen.</p>
+          </div>
+          <div class="header-status-stack">
+            <span class="status-chip implemented-chip" data-caption-done-count>{{ image_caption_summary.done }} erfasst</span>
+            <span class="status-chip light" data-caption-missing-count>{{ image_caption_summary.missing }} offen</span>
+          </div>
+        </div>
+        <form class="caption-workbench" action="/prototype/bildtexte/save" method="post" data-caption-workbench>
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <div class="caption-picker-list" aria-label="Zugeordnete Bilder">
+            {% for row in image_caption_rows %}
+            {% set row_key = row.group_id ~ "__" ~ row.image_id %}
+            <button class="caption-picker-item {% if loop.first %}active{% endif %}" type="button" data-caption-select="{{ row_key }}">
+              <span class="caption-picker-thumb">
+                {% if row.image_path %}
+                <img src="/projects/{{ selected_project.id }}/download?path={{ row.image_path }}" alt="Positionsbild {{ row.group_id }}">
+                {% else %}
+                <span>Kein Bild</span>
+                {% endif %}
+              </span>
+              <span>
+                <strong>{{ row.group_id }}{% if row.image_id %} / {{ row.image_id }}{% endif %}</strong>
+                <small data-caption-list-status="{{ row_key }}">{% if row.caption %}Text erfasst{% else %}Text fehlt{% endif %}</small>
+              </span>
+            </button>
+            {% endfor %}
+          </div>
+
+          <div class="caption-editor-panels">
+            {% for row in image_caption_rows %}
+            {% set row_key = row.group_id ~ "__" ~ row.image_id %}
+            <section class="caption-editor-panel {% if loop.first %}active{% endif %}" data-caption-panel="{{ row_key }}" {% if not loop.first %}hidden{% endif %}>
+              <div class="caption-editor-preview image-preview-frame">
+                {% if row.image_path %}
+                <img src="/projects/{{ selected_project.id }}/download?path={{ row.image_path }}" alt="Positionsbild {{ row.group_id }}">
+                {% else %}
+                <span>Kein Bild zugeordnet</span>
+                {% endif %}
+              </div>
+              <div class="caption-editor-fields">
+                <div class="section-heading compact">
+                  <div>
+                    <h3>{{ row.group_id }}{% if row.image_id %} / {{ row.image_id }}{% endif %}</h3>
+                    <p>{{ row.position }}{% if row.probes %} &middot; Proben {{ row.probes }}{% endif %}</p>
+                  </div>
+                  <span class="status-chip light" data-caption-panel-status="{{ row_key }}">{% if row.caption %}Text erfasst{% else %}Text fehlt{% endif %}</span>
+                </div>
+                {% if row.caption %}
+                <div class="caption-saved-card" data-caption-confirmation="{{ row_key }}">
+                  <strong>Bildtext gespeichert</strong>
+                  <p>{{ row.caption }}</p>
+                  <button class="button secondary" type="button" data-caption-edit="{{ row_key }}">Bildtext bearbeiten</button>
+                </div>
+                <input type="hidden" name="caption__{{ row.group_id }}__{{ row.image_id }}" value="{{ row.caption }}" data-caption-hidden data-caption-key="{{ row_key }}">
+                <label class="caption-edit-field" data-caption-edit-field="{{ row_key }}" hidden>Bildtext bearbeiten
+                  <textarea rows="7" placeholder="z. B. Abbildung 5: Beprobungsstelle {{ row.group_id }} ..." data-caption-textarea data-caption-key="{{ row_key }}" disabled>{{ row.caption }}</textarea>
+                </label>
+                {% else %}
+                <label>Bildtext
+                  <textarea name="caption__{{ row.group_id }}__{{ row.image_id }}" rows="7" placeholder="z. B. Abbildung 5: Beprobungsstelle {{ row.group_id }} ..." data-caption-textarea data-caption-key="{{ row_key }}">{{ row.caption }}</textarea>
+                </label>
+                <button class="button primary caption-panel-submit" type="submit">Diesen Bildtext speichern</button>
+                {% endif %}
+              </div>
+            </section>
+            {% endfor %}
+            <div class="button-row table-save-row">
+              <button class="button primary" type="submit">Bildtexte speichern</button>
+              {% if selected_project.outputs.image_captions %}
+              <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.image_captions }}">Bildtexte laden</a>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "karbonatisierung" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Karbonatisierung erfassen</h2>
+            <p>Karbonatisierungswerte koennen als CSV/TSV nachgetragen werden. Vorhandene Feldwerte werden aktualisiert, fehlende Zuordnungen bleiben offen.</p>
+          </div>
+          <span class="status-chip light">CSV/TSV</span>
+        </div>
+        {% if selected_project %}
+        <form class="form-panel lab-manual-form" action="/prototype/karbonatisierung/import" method="post">
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <label>Karbonatisierung nachtragen
+            <textarea name="carbonation_text" rows="7" spellcheck="false" placeholder="Probe&#9;Beprobungsstelle&#9;Karbonatisierung&#10;P01&#9;BS01&#9;5 mm">{{ selected_project.carbonation_text or "" }}</textarea>
+          </label>
+          <button class="button primary" type="submit">Karbonatisierung uebernehmen</button>
+        </form>
+        <div class="button-row">
+          <a class="button secondary" href="/prototype/tabellen?project_id={{ selected_project.id }}">Weiter zu Schritt 15</a>
+        </div>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Aktuelle Karbonatisierung</h2>
+            <p>{{ selected_project.field_measurements|length }} Feldzeilen.</p>
+          </div>
+        </div>
+        <div class="clean-table-preview">
+          <table>
+            <thead>
+              <tr>
+                <th>Probe</th>
+                <th>Position</th>
+                <th>Karbonatisierung</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in selected_project.field_measurements %}
+              <tr>
+                <td>{{ row.probe }}</td>
+                <td>{{ row.position }}</td>
+                <td>{{ row.carbonation }}</td>
+                <td>{{ row.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "tabellen" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Tabellenansichten erzeugen</h2>
+            <p>Aus der Masterliste werden getrennte Gutachtentabellen fuer Probenzuordnung, Chloridergebnisse und Bewertung erzeugt.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.report_tables %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.report_tables }}">Tabellen laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/mastertabelle?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.master_samples|length }} Masterzeilen</span>
+          </a>
+        </div>
+        <form class="button-row" action="/prototype/tabellen/generate" method="post">
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <button class="button primary" type="submit">Gutachtentabellen erzeugen</button>
+        </form>
+        {% if not selected_project.master_samples %}
+        <p class="empty-state">Bitte zuerst die Master-Probenliste erzeugen.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.outputs.report_tables %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Tabellen bereit</h2>
+            <p>{{ selected_project.outputs.report_tables }}</p>
+          </div>
+          <span class="status-chip implemented-chip">3 Tabellenblaetter</span>
+        </div>
+        <ul class="summary-list">
+          <li>Probenzuordnung</li>
+          <li>Chloridergebnisse mit Quelle</li>
+          <li>Bewertung/Zusammenfassung mit Status</li>
+        </ul>
+        <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.report_tables }}">Excel herunterladen</a>
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "review" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Review anzeigen</h2>
+            <p>Offene Punkte werden als Meldung angezeigt. Der Prototyp blockiert die weitere Bearbeitung dadurch nicht.</p>
+          </div>
+          <span class="status-chip implemented-chip">Fortfahren moeglich</span>
+        </div>
+        {% if selected_project %}
+        <div class="project-list compact-list">
+          <a class="project-row active-project" href="/prototype/tabellen?project_id={{ selected_project.id }}">
+            <span>
+              <strong>{{ selected_project.project.name or selected_project.id }}</strong>
+              <small>{{ selected_project.status }}</small>
+            </span>
+            <span class="status-chip light">{{ selected_project.master_samples|length }} Masterzeilen</span>
+          </a>
+        </div>
+        <form class="button-row" action="/prototype/review/generate" method="post">
+          <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+          <button class="button primary" type="submit">Review-Bericht erzeugen</button>
+        </form>
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.field_measurements_unavailable %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Meldung</h2>
+            <p>{{ selected_project.field_measurements_unavailable.reason }}</p>
+          </div>
+          <span class="status-chip light">nicht blockierend</span>
+        </div>
+        <p class="hint-text">Die weitere Bearbeitung bleibt moeglich. Position, Bohrtiefe, Hoehe und Karbonatisierung werden in den Tabellen bewusst offen gelassen.</p>
+      </div>
+      {% endif %}
+
+      {% if selected_project and selected_project.outputs.review_report %}
+      <div class="workspace-section quiet-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Review-Bericht bereit</h2>
+            <p>{{ selected_project.outputs.review_report }}</p>
+          </div>
+          <span class="status-chip implemented-chip">erstellt</span>
+        </div>
+        <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.review_report }}">Review herunterladen</a>
+      </div>
+      <div class="workspace-section review-browser-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Review im Browser</h2>
+            <p>Formatierte Vorschau des erzeugten Pruefberichts.</p>
+          </div>
+          <span class="status-chip light">Vorschau</span>
+        </div>
+        {% if review_preview and review_preview.available %}
+        <article class="review-browser-preview" aria-label="Review-Bericht Vorschau">
+          {{ review_preview.html|safe }}
+        </article>
+        {% else %}
+        <p class="empty-state">Die Review-Datei ist im Projektstatus vermerkt, wurde aber im Projektordner nicht gefunden. Bitte den Review-Bericht erneut erzeugen.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    {% elif selected_step.id == "export" %}
+    <section class="workflow-workspace">
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Export fuer Prototyp</h2>
+            <p>Schritt 17 erzeugt das fertige PDF-Gutachten und fasst danach alle vorhandenen Outputs als ZIP-Paket zusammen.</p>
+          </div>
+          {% if selected_project and selected_project.outputs.report_pdf %}
+          <a class="button primary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.report_pdf }}">PDF-Gutachten laden</a>
+          {% endif %}
+          {% if selected_project and selected_project.outputs.export_package %}
+          <a class="button secondary" href="/projects/{{ selected_project.id }}/download?path={{ selected_project.outputs.export_package }}">Exportpaket laden</a>
+          {% endif %}
+        </div>
+        {% if selected_project %}
+        <div class="button-row">
+          <form action="/prototype/export/generate" method="post">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <button class="button primary" type="submit">PDF und Exportpaket erzeugen</button>
+          </form>
+        </div>
+        {% if not selected_project.outputs %}
+        <p class="empty-state">Noch keine Outputs vorhanden.</p>
+        {% endif %}
+        {% else %}
+        <p class="empty-state">Noch kein aktives Projekt vorhanden.</p>
+        {% endif %}
+      </div>
+
+      {% if selected_project and selected_project.outputs %}
+      <div class="workspace-section">
+        <div class="section-heading compact">
+          <div>
+            <h2>Vorhandene Outputs</h2>
+            <p>{{ selected_project.outputs|length }} Dateien im Projektstatus.</p>
+          </div>
+          <span class="status-chip implemented-chip">exportierbar</span>
+        </div>
+        <ul class="summary-list">
+          {% for key, path in selected_project.outputs.items() %}
+          <li>{{ key }}: {{ path }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </section>
+
+    {% else %}
+    <section class="workflow-workspace">
+      <div class="step-cards">
+        <section class="step-card">
+          <h2>Eingaben</h2>
+          <ul>
+            {% for item in selected_step.inputs %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        <section class="step-card">
+          <h2>Aktionen</h2>
+          <ul>
+            {% for item in selected_step.actions %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        <section class="step-card result-card">
+          <h2>Ergebnis</h2>
+          <p>{{ selected_step.result }}</p>
+        </section>
+      </div>
+
+      <section class="workspace-section quiet-section">
+        <h2>Arbeitsbereich</h2>
+        <p>
+          Dieser Schritt ist bereits im Ablauf angelegt. Die konkrete Funktion
+          wird spaeter an dieser Stelle eingebaut.
+        </p>
+      </section>
+    </section>
+    {% endif %}
+
+    <footer class="workflow-footer">
+      {% if previous_step %}
+      <a class="button secondary" href="/prototype/{{ previous_step.id }}{{ project_query }}">Zurueck: {{ previous_step.title }}</a>
+      {% else %}
+      <span></span>
+      {% endif %}
+      {% if next_step %}
+      {% if next_step_state and next_step_state.unlocked %}
+      <a class="button primary" href="/prototype/{{ next_step.id }}{{ project_query }}">Weiter: {{ next_step.title }}</a>
+      {% else %}
+      <span class="button primary disabled" aria-disabled="true">Weiter gesperrt: {{ next_step.title }}</span>
+      {% endif %}
+      {% endif %}
+    </footer>
+  </main>
+</section>
+<script>
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('project_id') && !window.location.hash) {
+      var el = document.getElementById('workflow');
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
+  })();
+</script>
+{% endblock %}
